@@ -1,0 +1,98 @@
+
+I would tell Dr Pepper that moving the infrastructure to Cloud is a good practice in 
+today's world where you are never sure about your computing, storage and security requirements.
+Not only does it help us scale up and down on demand, it takes away most of the headache that goes 
+along with building and maintaining our own infrastructure. Then there's capital investment
+that is required for having your own infrastructure, which is huge by the way. And 
+even after spending time planning your infrastructure, you may end up under-provisioning or over 
+provisioning. With cloud you can scale horizontally i.e. adding new nodes when you need them and 
+removing them when you don't. Need more computing power? Add a computing node, same goes for storage.
+This is one of the greatest advantage you can have over having your own infrastructure, along
+with the fact that you only pay for what you use.
+
+To understand Cloud, you have to first understand virtualization which is, having arrays of  
+Computing, Storage and Networking hardware and having a abstraction layer that provides all these 
+resources to the applications running on it locally or from a remote location. 
+
+All the various cloud services that are out there, come with their own set of tools that make deploying 
+and maintaining application code and the related data an easy task. Hence, it makes a huge sense 
+shifting your infrastructure to cloud.
+
+It's said that Dr Pepper's grandson's girlfriend's uncle built a monolithic PHP application with
+SQLite and Riak databases. It works well, but reliability has been a problem. I would suggest him
+to use more secure databases like Reddis and make use of some security standard practices, like
+Encrypting stored files and their backups, keeping the software up to date i.e. with all the latest 
+patches, keeping the Database Servers separate from the Web Servers, minimizing the use of 3rd party 
+applications and using  Web Application Firewalls. For the application itself, I would suggest him to 
+have a Modular approach instead of a Monolithic one. 
+
+Design Dr Pepper's new infrastructure for AWS to be resilient to failure and highly secure....
+
+The AWS infrastructure for this Application would have EC2 instances in different geographical
+locations(depending on the application demand), AWS S3 for Database and other storage, various IAM 
+roles, Elastic Load Balancers.
+
+With IAM the application becomes more secure. You can create roles in IAM and attach policies
+to control which operations can be performed by the entity that assumes the role. You can also
+define which entity is allowed to assume the role. Example: You can create a "read-only" to allow
+an application to view EC2 details by attaching a AWS managed EC2ReadOnlyAccess policy to a 
+role.
+
+Although there are other storage options available with AWS like the Elastic Block Storage (low-latency,
+high cost), Glaciers (Archival Storage, high-latency, low-cost) and Elastic File System( data
+presented as a file system, access from multiple EC2 instances... also a good option); S3 suits our purpose. 
+It has data presented as buckets of Objects and this data can be accessed via API over the internet i.e.
+through http or https.
+ 
+Using AWS Elastic Load Balancer to load balance between the EC2 instances would be a good.
+Going for Geo location Load balancing would be better, as it will manage the resources more
+efficiently.
+
+AWS Elasticache could be used for making the application perform much faster and reduce latency.
+With Elasticache, applications can retrive data from in-memory caches, instead of relying entirely
+on slower disk based databases. Since, memory is much faster than disk, application queries
+served by AWS Elasticache will return significantly faster than those that go to the database,
+improving the through-put of the application.
+
+Detailed steps for deploying application stored on GitHub on AWS cloud using AWS Code Deploy, 
+IAM and EC2
+
+Note: ">>" stands for the next step (like a click or goto)
+
+1)Create two IAM profiles, one for the code deploy application and the other for the EC2 servers.
+AWS Home page >> Services >> IAM >> Roles >> Create New Role >> Name: "Code Deploy" >> Select Amazon EC2 
+>> Select Policy >> ..
+
+2)Create one more role for the EC2 Servers.
+AWS Home page >> Services >> IAM >> Roles >> Create New Role >> Name: "EC2 Code Deploy" >> Select 
+Amazon EC2 >> Select Policy >> ..
+
+3)Now that we have the two roles, we will have to create two EC2 instances.
+AWS Home page >> Services >> EC2 >> Launch Instance >> Select Linux >> Select Instance Type >>
+IAM role: Select the "EC2 Code Deploy" role that we created >> Give it a name >> Select Security Group
+>> Review and Launch
+
+4)Log into the instance>>
+yum -y update
+yum install -y aws-cli
+
+cd /home/ec2-users
+#Setup your AWS access, secret and region
+aws configure
+
+#To pull the code deploy agent on to the server and install it
+aws s3 cp s3://aws-codedeploy-us-west-1/latest/install --region us-west-1
+
+#install it
+chmod +x ./install
+
+#verify if the agent is running
+service codedeploy-agent status
+
+5)Create Application..
+AWS Home page >> Services >> Code Deploy >>Get Started now >> Custom Deployment >> Skip walkthrough
+>> Give Application name: DrPepper and Deployment Group name: DrPepper inc >> Search the EC2 tags >> 
+Name the EC2 instance >> Service role: select "CodeDeploy" >> Create Application
+
+Deploy New Revision >> Select.. "Application stored in GitHub" >> Type in the Repository Name
+and Commit ID >> Deploy
